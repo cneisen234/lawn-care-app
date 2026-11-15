@@ -1,8 +1,7 @@
-// Andy's Lawn Care's footer, kept as it was: the deep green-black "ground" with
-// moss + tan glows, the brand mark and wordmark, a blurb and a hand-lettered
-// line. Its Explore and Get in Touch columns come back with the marketing pages
-// and contact details (plan.md Step 20); nothing here points at a page that
-// doesn't exist yet.
+// The site's footer: the deep green-black "ground" with moss + tan glows, the
+// brand mark and wordmark, a blurb and a hand-lettered line. Explore and Get in
+// Touch columns arrive with the marketing pages and contact details (plan.md
+// Step 20); nothing here points at a page that doesn't exist yet.
 
 import { cacheLife } from 'next/cache';
 import Logo from './Logo';

@@ -1,4 +1,4 @@
-// The App's own details, in one place (like Andy's Lawn Care's lib/andy.ts).
+// The App's own details, in one place.
 //
 // PLACEHOLDER: the product name isn't chosen yet (plan.md gate M6). It renders
 // with a visible "Placeholder" tag wherever it's the headline, so nobody takes

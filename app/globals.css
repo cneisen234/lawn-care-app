@@ -1,9 +1,8 @@
 @import "tailwindcss";
 
-/* The App's brand: Andy's Lawn Care's "Forest & Stone" system, borrowed exactly
-   (plan.md Section 3F). Rugged, honest, up-north: deep forest greens grounded by
-   warm tan + stone. Anything the marketing site never needed is built in this
-   same language. */
+/* The App's brand: the "Forest & Stone" system (plan.md Section 3F). Rugged,
+   honest, up-north: deep forest greens grounded by warm tan + stone. This file
+   is the brand's source of truth; anything new is built in this same language. */
 
 :root {
   /* Greens — the primary color. Grass + pine. */

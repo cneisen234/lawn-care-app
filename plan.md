@@ -27,7 +27,7 @@
 
 **On the phone:** members use **the Pilot Light app as it is** (Lena chat, Allow cards, push, the camera to send photos to Lena, and links that open the dashboard). **No phone-app work.** The dashboard is mobile-first and **already works offline**: with Next 16's `experimental.useOffline` (on in Pilot Light), a save or page load made with no signal waits and goes through when the signal returns, with a "You're offline" line.
 
-**Project locations:** this repo `/Users/christopherneisen/Desktop/lawn-care-app`; Pilot Light `/Users/christopherneisen/Desktop/pilot-light`; the brand `/Users/christopherneisen/Desktop/andys-lawn-care` (reused as-is).
+**Project locations:** this repo `/Users/christopherneisen/Desktop/lawn-care-app`; Pilot Light `/Users/christopherneisen/Desktop/pilot-light`. The brand lives in this repo (`app/globals.css`, `components/`).
 
 ### The user's ground rules (apply everywhere)
 1. **Reuse Pilot Light; never reinvent the wheel.** Anything Pilot Light's existing structure can do is built that way. No duplicated code, no parallel versions ("this is how apps break"). Net-new only where Section 3D says so. When something *almost* fits, extend it in Pilot Light.
@@ -35,7 +35,7 @@
 3. **Customer-facing = website; admin = Pilot Light.** No exceptions.
 4. **No phone-app work.** The Pilot Light app is used as it is.
 5. **Premium, not cheap.** Never cut capability to hit a low price.
-6. **Andy's Lawn Care brand, exactly, and grow it.** Anything it never defined (tables, forms, the map, the portal) is built in the same visual language.
+6. **The App's "Forest & Stone" brand (Section 3F), and grow it.** Its source of truth is this repo (`app/globals.css`, `components/`). Anything it never defined (tables, forms, the map, the portal) is built in the same visual language.
 7. **Member scope is non-negotiable.** No query, tool, page, email or export runs for a member without their scope. A guard fails loudly; nothing relies on remembering.
 8. **Lena-level settings are admin-only.** One global Lena configuration for all members.
 9. **Bookkeeping happens in the workflow.** Never add an after-work chore.
@@ -71,7 +71,7 @@
 | Weather | National Weather Service API (free, no key, US-only; the User-Agent carries a generic App contact, never personal details) | User (API) / Claude (provider) |
 | Taxes | No tax reports or tax APIs. Members enter their own tax rate; meaning per open question (a) | User |
 | Phone | The Pilot Light app as is; dashboard offline support as is | User |
-| Brand | Andy's "Forest & Stone" (Section 3F) through the site-convention theme variables, so Pilot Light's `theme:import` dresses the member dashboard too | User / Claude (seam) |
+| Brand | The App's "Forest & Stone" system (Section 3F), in this repo, through the site-convention theme variables, so Pilot Light's `theme:import` dresses the member dashboard too | User / Claude (seam) |
 | Framework | This repo: Next.js 16.4.6 + React 19.3 + Tailwind v4; read `node_modules/next/dist/docs/` first (AGENTS.md). Pilot Light keeps its own stack | User / Spec |
 | Hosting | This repo on Vercel (M9); Pilot Light as today | Claude |
 | Testing | No test framework (Pilot Light's pattern): live checks with **two test members**; isolation re-checked at every checkpoint | Claude |
@@ -94,7 +94,7 @@
 ### Conventions to reuse
 - **Pilot Light:** `lib/auth/*` (sessions, roles, invites, resets, support sessions), `lib/kindling/commands.ts` (`inviteAndEmail`), `lib/addons/*` (module, catalog, registry, grants, `eventHandlers`, `pages`, settings), schema maps (`lib/maps/format.ts`: statuses + transitions + **stamps**, `parent` child records, `customerLink`, image fields, money, search, filters, `showWhen`, `modelFacts`, `payment`) and **Manage**, **Today** (customer-sent records in their first status, one-tap next status), the action pipeline + Allow cards (rule-proposed too), `lib/events/*` (change triggers, the daily sweep in `lib/events/run.ts`), Lena's owner and customer agents, `lib/payments/stripe`, site actions, notifications + push, `lib/names.ts`, the shared UI and "THE design pattern".
 - **Site side (this repo):** `pilot-light/docs/site-conventions.md` and `docs/site-module.md` (theme variables, connection env, endpoints, navigation, `siteEmailHeaders`, site actions, `notifyChange`, `<LenaForCustomers />`, payments).
-- **Brand:** `andys-lawn-care/app/globals.css`, `components/Logo.tsx`, `GrassEdge.tsx`, `MownLawn.tsx`, `Navigation.tsx`, `Footer.tsx`, its font setup.
+- **Brand:** this repo's `app/globals.css`, `components/` (`Logo`, `GrassEdge`, `MownLawn`, `Navigation`, `Footer`) and the fonts in `app/layout.tsx`.
 - **`AGENTS.md`:** read the Next docs before Next-specific code; leave the auto-generated block in place.
 
 ### Build discipline
@@ -223,7 +223,7 @@ Every table carries **`member_id`** (indexed, first in composite indexes); money
 | Estimator, route, weather | Math, API results, fixed rules | Nothing |
 | Lena (members, admins, clients) | Tools, simulation, Allow cards, verification, identity | Understanding requests; grounded answers |
 
-### 3F. Brand (from `andys-lawn-care`)
+### 3F. Brand
 **Forest & Stone:** forest `#2B4A34`, forest-deep `#1C3323`, forest-soft `#D9E2D2`; tan `#B8A17E`, tan-deep `#9A835F`, tan-soft `#EADFC9`; moss `#8A9A5B`, moss-deep `#6E7D43`; cream `#F1EDE1`, paper `#F8F5EC`, charcoal `#282722`, ash `#4E4C44`, stone `#837E72`, bone `#EFEBE0`, border `#E4DCCB`, ink `#0E1A12`. **Fonts:** Zilla Slab (headings, wordmark), Caveat (accents, sparingly), Nunito Sans (body). **Elements:** pill buttons that press into a hard offset shadow, `.card` / `.card-sign`, `.badge`, `.eyebrow`, `.script-accent`, `.divider-leaf`, `.mow-stripes-dark`, `Logo`, `GrassEdge`, `MownLawn`, entrance animations with reduced motion. Exposed as the site-convention theme variables so Pilot Light's members' dashboard wears it.
 
 ---
@@ -231,7 +231,7 @@ Every table carries **`member_id`** (indexed, first in composite indexes); money
 ## 4. Build steps (24 steps, Phases 0–6)
 
 ### Phase 0: Foundation
-**Step 1: Brand foundation (this repo).** Read the Next 16 docs. Port Andy's tokens, classes, fonts, `Logo`, `GrassEdge`, `MownLawn`, nav and footer; add the site-convention theme variables; replace the starter page. Wordmark uses the placeholder until M6.
+**Step 1: Brand foundation (this repo).** Read the Next 16 docs. Put the brand into this repo: tokens, classes, fonts, `Logo`, `GrassEdge`, `MownLawn`, nav and footer; add the site-convention theme variables; replace the starter page. Wordmark uses the placeholder until M6.
 
 **Step 2: Env, database layer & SETUP.md (this repo).** Drizzle + Neon (Pilot Light's versions and `lib/db` pattern), zod, `lib/env.ts` with gate-named errors, `.env.example`, `SETUP.md`, `.claude/launch.json`.
 
@@ -388,12 +388,12 @@ Every table carries **`member_id`** (indexed, first in composite indexes); money
 
 **Status key:** ☐ not started · ◐ in progress · ☑ done
 
-**Current phase:** Phase 0 in progress. Step 1 done (2026-11-15). Next: Step 2. Plan redrawn from scratch 2026-11-15 (generic SaaS layer, no phone-app work). Member naming, member logins, admin visibility and Stripe Connect confirmed (Square not planned). Full-control switch confirmed with hardened rules (Step 9); Stripe Connect is new work, accepted. Open: question (a) (tax rate), needed before Step 19.
+**Current phase:** Phase 0 in progress. Steps 1–2 done (2026-11-15). Next: Step 3 (writing the schema; generating and running its migrations needs gate M1, since drizzle-kit needs the database URL). Plan redrawn from scratch 2026-11-15 (generic SaaS layer, no phone-app work). Member naming, member logins, admin visibility and Stripe Connect confirmed (Square not planned). Full-control switch confirmed with hardened rules (Step 9); Stripe Connect is new work, accepted. Open: question (a) (tax rate), needed before Step 19.
 
 | Step | Description | Status | Notes |
 |---|---|---|---|
-| 1 | Brand foundation | ☑ | Read Next 16 fonts/CSS/metadata/caching docs first. `app/globals.css`: Andy's tokens and classes exactly, plus the site-convention theme block (all 18 variables; every text pair checked ≥4.5:1: muted = `--ash` 7.4 (Andy's `--stone` is 3.5, kept for large text only), brand-soft text = `--forest` 7.4 (moss-deep is 3.4)). `GrassEdge`/`MownLawn` copied byte-for-byte, `Logo` with only its comment changed; `Navigation`/`Footer` keep Andy's design, content from `lib/site.ts` (the placeholder name, one place until M6; menu empty until Step 20, so no menu button and no dead links). Layout: Zilla Slab, Caveat, Nunito Sans; metadata + theme color. Starter page replaced by a branded placeholder home (hero, dark mown band with sign cards, striped lawn), no buttons yet. **Found and fixed:** Cache Components refuses a bare `new Date()` in prerender, so the footer's year is a cached component (`'use cache'` + `cacheLife('days')`). Verified: tsc, lint, `next build` clean (home static, revalidates daily); in the browser at desktop and 375px: no console errors, no sideways scroll, all 18 theme variables resolve, fonts resolve to their Google Fonts names (`theme:import` can read them; Pilot Light's validator accepts the minifier's 8-digit hex shadow). **Port:** local Pilot Light holds 3000, so this site runs on **3001** (`dev` script + launch.json). **For Step 20:** Andy's small decorative text is under 4.5:1 (eyebrow moss-deep on cream 3.8, tan-deep accents 3.1, badge moss-deep on sage 3.4); fine as accents, but don't use them for anything people must read |
-| 2 | Env, database layer & SETUP.md | ☐ | `.claude/launch.json` already done in Step 1 (port 3001) |
+| 1 | Brand foundation | ☑ | Read Next 16 fonts/CSS/metadata/caching docs first. `app/globals.css`: the brand's tokens and classes, plus the site-convention theme block (all 18 variables; every text pair checked ≥4.5:1: muted = `--ash` 7.4 (`--stone` is 3.5, kept for large text only), brand-soft text = `--forest` 7.4 (moss-deep is 3.4)). `components/`: `Logo`, `GrassEdge`, `MownLawn`, `Navigation`, `Footer`, content from `lib/site.ts` (the placeholder name, one place until M6; menu empty until Step 20, so no menu button and no dead links). Layout: Zilla Slab, Caveat, Nunito Sans; metadata + theme color. Starter page replaced by a branded placeholder home (hero, dark mown band with sign cards, striped lawn), no buttons yet. **Found and fixed:** Cache Components refuses a bare `new Date()` in prerender, so the footer's year is a cached component (`'use cache'` + `cacheLife('days')`). Verified: tsc, lint, `next build` clean (home static, revalidates daily); in the browser at desktop and 375px: no console errors, no sideways scroll, all 18 theme variables resolve, fonts resolve to their Google Fonts names (`theme:import` can read them; Pilot Light's validator accepts the minifier's 8-digit hex shadow). **Port:** local Pilot Light holds 3000, so this site runs on **3001** (`dev` script + launch.json). **For Step 20:** the brand's small decorative text is under 4.5:1 (eyebrow moss-deep on cream 3.8, tan-deep accents 3.1, badge moss-deep on sage 3.4); fine as accents, but don't use them for anything people must read |
+| 2 | Env, database layer & SETUP.md | ☑ | Followed Kindling's client-site pattern (a site that owns its schema) + Pilot Light's env pattern; versions matched to them: `drizzle-orm` ^0.45.4, `@neondatabase/serverless` ^1.2.1, `ws` ^8.23, `zod` ^4.6.7, `server-only`; dev `drizzle-kit` ^0.31.11, `dotenv` ^18, `@types/ws`. `lib/db/index.ts` (server-only; Neon serverless Pool over WebSockets so transactions work; URL through `lib/env.ts`), `lib/db/schema.ts` (empty until Step 3), `drizzle.config.ts` (loads `.env.local`, migrates over the direct connection, `out: drizzle/`, strict; the one direct `process.env` reader). Scripts: `db:generate`, `db:migrate`, `db:studio`, `vercel-build` (migrate, then build), `start` on 3001. `lib/env.ts`: zod, every key optional at load (blank = unset), `getDatabaseUrl()` fails naming gate M1 (missing, or not a Postgres URL), `configured.database()`; only M1's variables now, each later step adds its own. `.env.example` (committed: `!.env.example` in `.gitignore`) + blank `.env.local` (ignored). `SETUP.md`: prerequisites, install, env, database commands, run on 3001, deploy, all 11 gates with full steps (same text as here). `.claude/launch.json` was done in Step 1. Verified: tsc, lint, build clean; drizzle-kit with no URL stops with the M1 message; `getDatabaseUrl()` missing → "Complete gate M1", malformed → "not a Postgres connection string", valid → returned; `.env.example` tracked, `.env.local` ignored. `npm audit`: **0 in production dependencies**; 11 moderate in dev-only tools (esbuild inside drizzle-kit, minimatch inside eslint-config-next), left as is (the forced fix downgrades them) |
 | 3 | The App's schema | ☐ | |
 | - | ⚠️ M1 The App's database | ☐ | |
 | 4 | The App in Pilot Light | ☐ | |

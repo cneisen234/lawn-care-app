@@ -1,7 +1,6 @@
 'use client';
 
-// Andy's Lawn Care's navigation, kept as it was: a sticky cream bar that blurs
-// once the page scrolls, the brand mark + wordmark, links with an active dot,
+// The site's navigation: a sticky cream bar that blurs once the page scrolls, the brand mark + wordmark, links with an active dot,
 // and a full-screen forest menu on phones. Its links and call to action come
 // from lib/site.ts: until the marketing pages exist (plan.md Step 20) there are
 // none, so only the brand shows and no menu button appears.

@@ -1,6 +1,6 @@
-// The App's brand mark, borrowed from Andy's Lawn Care (plan.md Section 3F): a
-// forest badge with grass blades + a warm sun, beside the slab wordmark. Swap
-// this component out if the App gets its own logo with its name (gate M6).
+// The App's brand mark (plan.md Section 3F): a forest badge with grass blades +
+// a warm sun, beside the slab wordmark. Swap this component out if the App gets
+// its own logo with its name (gate M6).
 
 export default function Logo({
   size = 44,

@@ -1,26 +1,326 @@
 @import "tailwindcss";
 
+/* The App's brand: Andy's Lawn Care's "Forest & Stone" system, borrowed exactly
+   (plan.md Section 3F). Rugged, honest, up-north: deep forest greens grounded by
+   warm tan + stone. Anything the marketing site never needed is built in this
+   same language. */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Greens — the primary color. Grass + pine. */
+  --forest: #2B4A34;         /* primary forest green */
+  --forest-deep: #1C3323;    /* darker pine — dark bands, footer, borders, hovers */
+  --forest-soft: #D9E2D2;    /* pale sage wash */
+
+  /* Warm tan — the "stone" half. Earthy, weathered, friendly. */
+  --tan: #B8A17E;            /* warm tan accent */
+  --tan-deep: #9A835F;       /* richer tan for text + borders on light */
+  --tan-soft: #EADFC9;       /* pale tan wash */
+
+  /* Moss — supporting green for fresh / "in season" cues. */
+  --moss: #8A9A5B;
+  --moss-deep: #6E7D43;
+
+  /* Warm neutrals — the stone/paper ground. */
+  --cream: #F1EDE1;          /* main page background */
+  --paper: #F8F5EC;          /* lighter alt surface + cards */
+  --charcoal: #282722;       /* warm near-black — headings + body */
+  --ash: #4E4C44;            /* muted body text */
+  --stone: #837E72;          /* secondary text + labels (large text only: 3.5:1 on cream) */
+  --bone: #EFEBE0;           /* text on dark backgrounds */
+  --ink: #0E1A12;            /* deepest green-black — the footer "ground" */
+
+  /* ---- Kindling site conventions: theme (pilot-light/docs/site-conventions.md §1) ----
+     Pilot Light's `theme:import` reads these, so members' dashboard wears this
+     brand too. Every text pair is 4.5:1 or better (checked 2026-11-15): charcoal
+     on cream 12.8 / paper 13.7; ash on cream 7.4 / paper 7.9; bone on forest 8.3;
+     forest on forest-soft 7.4. */
+  --background: var(--cream);
+  --foreground: var(--charcoal);
+  --surface: var(--paper);
+  --border: #E4DCCB;
+  --muted-foreground: var(--ash);
+  --brand: var(--forest);
+  --brand-foreground: var(--bone);
+  --font-body: var(--font-nunito);
+  --font-heading: var(--font-zilla);
+
+  /* style: the "sign" look — forest-deep outlines, pill buttons, hard offset shadows */
+  --outline: var(--forest-deep);
+  --outline-width: 2px;
+  --radius: 1.1rem;
+  --radius-field: 0.875rem;
+  --radius-button: 9999px;
+  --shadow: 5px 5px 0 rgba(154, 131, 95, 0.55);
+  --shadow-button: 4px 4px 0 var(--forest-deep);
+  --brand-soft: var(--forest-soft);
+  --brand-soft-foreground: var(--forest);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* next/font variables wired up in layout.tsx */
+  --font-display: var(--font-zilla);   /* sturdy slab serif — hero + headings */
+  --font-hand: var(--font-caveat);     /* hand-lettered accent — sparingly */
+  --font-body: var(--font-nunito);     /* friendly body sans */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Tailwind v4 preflight drops the pointer cursor on buttons — put it back */
+button:not(:disabled) {
+  cursor: pointer;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--cream);
+  color: var(--charcoal);
+  font-family: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-zilla), Georgia, serif;
+  color: var(--charcoal);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.08;
+}
+
+/* Sturdy slab display treatment — reserved for hero + wordmark moments */
+.font-display {
+  font-family: var(--font-zilla), Georgia, serif;
+  font-weight: 700;
+}
+
+/* Hand-lettered accent — the "yard-sign" warmth. Accents only. */
+.font-hand {
+  font-family: var(--font-caveat), ui-rounded, cursive;
+  letter-spacing: 0;
+}
+
+/* Handwritten tan accent line above headings */
+.script-accent {
+  font-family: var(--font-caveat), cursive;
+  color: var(--tan-deep);
+  font-weight: 700;
+  font-size: 1.7rem;
+  line-height: 1;
+}
+.script-accent-on-dark { color: var(--tan); }
+
+/* Small-caps eyebrow label */
+.eyebrow {
+  font-family: var(--font-zilla), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--moss-deep);
+}
+.eyebrow-on-dark { color: var(--moss); }
+
+.section-padding { padding: 5.5rem 1rem; }
+@media (max-width: 768px) {
+  .section-padding { padding: 3.5rem 1rem; }
+}
+
+/* ---- Buttons ---- */
+
+/* Primary forest CTA — chunky button that presses into its shadow */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-zilla), serif;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  color: var(--bone);
+  background-color: var(--forest);
+  border: 2px solid var(--forest-deep);
+  border-radius: 9999px;
+  padding: 0.85rem 1.9rem;
+  box-shadow: 4px 4px 0 var(--forest-deep);
+  transition: transform 0.14s ease, box-shadow 0.14s ease, background-color 0.25s ease;
+}
+.btn-primary:hover {
+  background-color: var(--forest-deep);
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--forest-deep);
+}
+.btn-primary:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--forest-deep); }
+
+/* Tan CTA — warm secondary-primary, for variety on dark bands */
+.btn-tan {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-zilla), serif;
+  font-weight: 600;
+  color: var(--forest-deep);
+  background-color: var(--tan);
+  border: 2px solid var(--tan-deep);
+  border-radius: 9999px;
+  padding: 0.85rem 1.9rem;
+  box-shadow: 4px 4px 0 var(--tan-deep);
+  transition: transform 0.14s ease, box-shadow 0.14s ease, background-color 0.25s ease;
+}
+.btn-tan:hover {
+  background-color: var(--tan-deep);
+  color: var(--bone);
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--tan-deep);
+}
+.btn-tan:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--tan-deep); }
+
+/* Outline button — low-emphasis actions */
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-zilla), serif;
+  font-weight: 600;
+  color: var(--forest);
+  background-color: transparent;
+  border: 2px solid var(--forest);
+  border-radius: 9999px;
+  padding: 0.85rem 1.7rem;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.14s ease;
+}
+.btn-outline:hover { background-color: var(--forest); color: var(--bone); transform: translateY(-1px); }
+/* On dark backgrounds */
+.btn-outline-cream { color: var(--bone); border-color: var(--bone); }
+.btn-outline-cream:hover { background-color: var(--bone); color: var(--forest-deep); }
+
+/* ---- Cards ---- */
+
+/* Feature card — paper panel with a soft hairline that lifts + tints on hover */
+.card {
+  background-color: var(--paper);
+  border: 1.5px solid var(--border);
+  border-radius: 1.1rem;
+  box-shadow: 0 10px 24px -18px rgba(28, 51, 35, 0.45);
+  transition: transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.card:hover {
+  transform: translateY(-4px);
+  border-color: var(--moss);
+  box-shadow: 0 20px 36px -20px rgba(28, 51, 35, 0.5);
+}
+
+/* Sturdy "sign" card — chunky outline + hard tan offset shadow, for feature grids */
+.card-sign {
+  background-color: var(--paper);
+  border: 2px solid var(--forest-deep);
+  border-radius: 1.1rem;
+  box-shadow: 5px 5px 0 rgba(154, 131, 95, 0.55);
+  transition: transform 0.22s cubic-bezier(0.34, 1.5, 0.64, 1), box-shadow 0.22s ease;
+}
+.card-sign:hover {
+  transform: translateY(-4px);
+  box-shadow: 8px 10px 0 rgba(154, 131, 95, 0.6);
+}
+.card-sign-moss { box-shadow: 5px 5px 0 rgba(138, 154, 91, 0.5); }
+.card-sign-moss:hover { box-shadow: 8px 10px 0 rgba(138, 154, 91, 0.55); }
+
+/* ---- Badges / chips ---- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-zilla), sans-serif;
+  font-weight: 600;
+  font-size: 0.76rem;
+  letter-spacing: 0.02em;
+  color: var(--moss-deep);
+  background-color: var(--forest-soft);
+  border-radius: 9999px;
+  padding: 0.3rem 0.85rem;
+}
+.badge-tan { color: var(--tan-deep); background-color: var(--tan-soft); }
+.badge-on-dark { background-color: rgba(239, 235, 224, 0.16); color: var(--bone); }
+.badge-dot { width: 0.45rem; height: 0.45rem; border-radius: 9999px; background: currentColor; }
+
+/* Placeholder tag — makes it unmistakable that a value is a stand-in */
+.placeholder-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-nunito), sans-serif;
+  font-weight: 700;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--tan-deep);
+  background-color: transparent;
+  border: 1.5px dashed var(--tan-deep);
+  border-radius: 9999px;
+  padding: 0.1rem 0.5rem;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* ---- Decorative bits ---- */
+
+/* Divider: a hairline with a small, sturdy center diamond */
+.divider-leaf {
+  width: 6rem;
+  height: 2px;
+  background: linear-gradient(to right, transparent, var(--moss), transparent);
+  position: relative;
+}
+.divider-leaf::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--moss-deep);
+  box-shadow: 0 0 0 0.4rem var(--cream);
+}
+.divider-leaf-on-paper::after { box-shadow: 0 0 0 0.4rem var(--paper); }
+
+/* Hide scrollbars on horizontal strips */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Diagonal mow-line texture — kept for the dark green bands only, where the
+   soft light/dark lines read as a subtle mown surface. Light sections use the
+   crafted GrassEdge / MownLawn scenes instead. */
+.mow-stripes-dark {
+  background-image: repeating-linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.03) 0px,
+    rgba(255, 255, 255, 0.03) 34px,
+    rgba(255, 255, 255, 0.06) 34px,
+    rgba(255, 255, 255, 0.06) 68px
+  );
+}
+
+/* Gentle float for decorative bits */
+@keyframes floaty {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(3deg); }
+}
+.floaty { animation: floaty 5s ease-in-out infinite; }
+.floaty-slow { animation: floaty 7.5s ease-in-out infinite; }
+
+/* ---- Entrance animations ---- */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
+
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in-up, .floaty, .floaty-slow { animation: none; opacity: 1; }
 }

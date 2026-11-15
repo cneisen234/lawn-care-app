@@ -18,7 +18,7 @@ const migrationUrl = process.env.POSTGRES_URL_NON_POOLING || process.env.DATABAS
 
 if (!migrationUrl) {
   throw new Error(
-    "Set DATABASE_URL_UNPOOLED (or POSTGRES_URL_NON_POOLING; preferred) or DATABASE_URL in .env.local before running drizzle-kit (gate M1 in plan.md / SETUP.md).",
+    "No database URL. Locally: set DATABASE_URL_UNPOOLED (or POSTGRES_URL_NON_POOLING; preferred) or DATABASE_URL in .env.local. On Vercel: connect the App's database to the project (Storage → lawn-care-app-db → Connect Project), then redeploy. (Gates M1 and M3 in plan.md / SETUP.md.)",
   );
 }
 

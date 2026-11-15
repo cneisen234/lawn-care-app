@@ -6,8 +6,10 @@
 // it, and then it fails loudly naming the exact gate. Each step adds the
 // variables it uses here (and to .env.example), never ahead of time.
 //
-// Never read process.env directly elsewhere. The one exception is
-// drizzle.config.ts, which runs in the drizzle-kit CLI.
+// Never read process.env directly elsewhere. The exceptions: drizzle.config.ts
+// and scripts/ (they run outside Next.js), and Pilot Light's site module
+// (lib/pilot-light/), which reads its own PILOT_LIGHT_* names and is never
+// edited here.
 
 import { z } from "zod";
 

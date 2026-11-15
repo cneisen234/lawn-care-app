@@ -73,7 +73,7 @@
 | Phone | The Pilot Light app as is; dashboard offline support as is | User |
 | Brand | The App's "Forest & Stone" system (Section 3F), in this repo, through the site-convention theme variables, so Pilot Light's `theme:import` dresses the member dashboard too | User / Claude (seam) |
 | Framework | This repo: Next.js 16.4.6 + React 19.3 + Tailwind v4; read `node_modules/next/dist/docs/` first (AGENTS.md). Pilot Light keeps its own stack | User / Spec |
-| Hosting | This repo on Vercel (M9); Pilot Light as today | Claude |
+| Hosting | This repo on Vercel: its free `*.vercel.app` address from M3 (so the live Pilot Light can reach it; Luzerne Express is connected the same way), the custom domain at M9; Pilot Light as today | User (2026-11-15) |
 | Testing | No test framework (Pilot Light's pattern): live checks with **two test members**; isolation re-checked at every checkpoint | Claude |
 
 ### Feature scope
@@ -111,13 +111,13 @@ Each gate is repeated inline at the step it blocks. Pilot Light's existing accou
 
 - **M1** The App's database in Vercel Storage (Step 3)
 - **M2** The App's admin login, a test email (Step 4)
-- **M3** Connect this site to Pilot Light (Step 4)
+- **M3** Connect this site to Pilot Light, at its Vercel address (Step 4)
 - **M4** Stripe account for the App, test mode, with Connect (Step 13)
 - **M5** Google Maps Platform keys (Step 15)
 - **M6** Product name + domain (Step 20)
 - **M7** Terms of Service + Privacy Policy approved (Step 23)
 - **M8** Sending domain for the App's emails (Step 24)
-- **M9** Vercel project + domain for this site (Step 24)
+- **M9** The custom domain for this site (Step 24; the Vercel project exists since M3)
 - **M10** Subscription prices (Step 24)
 - **M11** Stripe live mode (Step 24)
 
@@ -239,7 +239,7 @@ Every table carries **`member_id`** (indexed, first in composite indexes); money
 
 > **⚠️ MANUAL GATE (M1): The App's database.**
 > 1. <https://vercel.com/dashboard> (team selected) → **Storage** → **Create Database** → **Neon** → **Continue**.
-> 2. Region **Washington, D.C., USA (iad1)**; name `lawn-care-app-db` → **Create**. Skip connecting a project (M9 does).
+> 2. Region **Washington, D.C., USA (iad1)**; name `lawn-care-app-db` → **Create**. Skip connecting a project (M3 does).
 > 3. **.env.local** tab → **Show secret** → copy the pooled `DATABASE_URL` and the direct `DATABASE_URL_UNPOOLED` into this repo's `.env.local` (pasting Vercel's block as it is works; the older name `POSTGRES_URL_NON_POOLING` works too).
 > 4. Tell Claude; Claude runs the migrations and seed.
 >
@@ -254,10 +254,12 @@ Every table carries **`member_id`** (indexed, first in composite indexes); money
 >
 > ☑ once you can sign in as the App's admin.
 
-> **⚠️ MANUAL GATE (M3): Connect this site.**
-> 1. Claude runs `npm run site:connect -- --business <app-slug>` in Pilot Light; it prints `DATABASE_URL`, `PILOT_LIGHT_BUSINESS_ID`, `PILOT_LIGHT_SITE_SECRET`.
-> 2. Put them in this repo's `.env.local`; Claude copies the site module into `lib/pilot-light/` (with your OK).
-> 3. Claude runs `npm run site:check -- --business <app-slug>`.
+> **⚠️ MANUAL GATE (M3): Connect this site, at its Vercel address.** The live Pilot Light health-checks every connected site and can't reach `localhost`, so the site is connected at a real address: its free `*.vercel.app` address now (user decision, 2026-11-15; Luzerne Express is connected the same way), the custom domain at M9.
+> 1. Push this repo (the user commits and pushes) → <https://vercel.com/new> → import it.
+> 2. Vercel → **Storage** → `lawn-care-app-db` → **Connect Project** → this project, all environments → **Redeploy**. Note the `*.vercel.app` address.
+> 3. Claude runs `npm run site:connect -- --business lawn-care-app --url https://<address>.vercel.app` in Pilot Light; it prints `PILOT_LIGHT_URL`, `PILOT_LIGHT_BUSINESS_ID`, `PILOT_LIGHT_SITE_SECRET`.
+> 4. Put them in this repo's `.env.local` and the Vercel project's env vars (the secret marked **Sensitive**); never in chat. Claude copies the site module into `lib/pilot-light/` and its route (with your OK); the user commits and pushes (redeploy).
+> 5. Claude runs `npm run site:check -- --business lawn-care-app`.
 >
 > ☑ once the check passes.
 
@@ -359,7 +361,7 @@ Each tier includes its members' Lena usage. Like every Pilot Light plan, nothing
 >
 > ☑ once a test invoice arrives from the App's domain.
 
-> **⚠️ MANUAL GATE (M9): Vercel & domain.** Push this repo (the user commits and pushes) → <https://vercel.com/new> → import → connect the App's database (M1) → add every env var → **Domains** → the domain (M6) with its DNS → point Stripe's webhooks and `site:connect` at the live address.
+> **⚠️ MANUAL GATE (M9): The custom domain.** The Vercel project exists since M3. **Settings → Domains** → the domain (M6) with its DNS → Claude runs `site:connect --url https://<domain>` (moves the site; its new secret goes into Vercel) → point Stripe's webhooks at the domain; check every env var is in Vercel.
 >
 > ☑ once the site loads on its domain and `site:check` passes.
 
@@ -383,7 +385,7 @@ Each tier includes its members' Lena usage. Like every Pilot Light plan, nothing
 |---|---|---|---|
 | Pilot Light (existing) | Everything behind a sign-in, Lena, events, invites, push, the phone app | Running | — |
 | Neon via Vercel Storage | The App's database | Your plan | M1 |
-| Vercel | This site | Your plan | M9 |
+| Vercel | This site | Your plan | M3, M9 |
 | Stripe | Billing (subscriptions) + Connect (member payments) | Per transaction | M4, M10, M11 |
 | Google Maps Platform | Satellite map, geocoding, routes | Usage, budget-capped | M5 |
 | National Weather Service | Forecasts | Free | — |
@@ -407,8 +409,8 @@ Each tier includes its members' Lena usage. Like every Pilot Light plan, nothing
 | 3 | The App's schema | ☑ | `lib/db/schema.ts`: all 14 Section 2C tables, 12 status enums, money in cents, rates in basis points, check constraints. **Two foreign keys on every link between member-owned records:** a single-column one (Pilot Light's schema reader only reads those) and a composite one with `member_id` (16 of them), so the database itself refuses cross-member links. A member is never cascade-deleted; a job's checklist/photos and an invoice's lines go with it; payments never cascade; a used service can't be deleted, only switched off. `jobs.minutes` is a generated column from the `started_at`/`completed_at` stamps. Added to 2C while building: `members.timezone`, `jobs.quote_request_id`, `jobs.weather_note` (instead of a flag), `client_invoices.tax_rate_bp` (kept with the invoice) and `last_reminder_at`, `client_payments.stripe_account_id`. Migration `drizzle/0000_init_app_schema.sql` (reviewed: no destructive statements). `scripts/seed.ts` (`npm run db:seed`, tsx): two test members (Green Acres: active, monthly; Northwoods: comped, per visit, 6% tax), touching only their two fixed ids, one transaction, dates relative to today. The direct connection is read as `DATABASE_URL_UNPOOLED` (Vercel's name) or `POSTGRES_URL_NON_POOLING`. Verified on the real database: every invoice's lines, tax and total add up; paid invoices equal their payments; job statuses match their invoices; minutes match the stamps; checklist amounts match each member's pricing; **0 cross-member links**; every invoice state present for both members; seed re-runs identically; **a direct insert of one member's job onto another member's client is refused by the database** (`jobs_member_client_fk`). Note: weekends have no visits, so a job in progress only appears in weekday seeds |
 | - | ⚠️ M1 The App's database | ☑ | `lawn-care-app-db` (Neon, Vercel Storage, iad1, PostgreSQL 18.7); pooled + direct URLs in `.env.local` (Vercel's block pasted as is) |
 | 4 | The App in Pilot Light | ◐ | `business:create` → "Lawn Care App" (`lawn-care-app`, America/Detroit, status setup, Lena + Sync & Guard); `db:register` → the App database registered (pooled), `ops` schema v27 (+27), add-ons synced; the App's `public` tables and seed untouched (14 tables, 2 members). `theme:import --url http://localhost:3001` → saved, every pair readable, Nunito Sans / Zilla Slab. **Found and fixed:** the minifier ships `0.875rem` as `.875rem`, which theme:import refuses, so `--radius-field` is `14px`. The App appears in Kindling's clients report (`clientReport()`, the console's source). Waiting: M2, M3 (the site has no public address yet; the live health checks don't skip localhost) |
-| - | ⚠️ M2 Admin login (test email) | ☐ | |
-| - | ⚠️ M3 Connect this site | ☐ | |
+| - | ⚠️ M2 Admin login (test email) | ☑ | Owner invite to the test email `chris+lawn@kindlingdigital.org` (run in the user's terminal, so the link never entered the chat); accepted, signed in 2026-11-15. Moves to the real admin email at go-live |
+| - | ⚠️ M3 Connect this site | ◐ | Vercel project created by the user; first deploy failed (no database env on Vercel) → `lawn-care-app-db` connected to the project, redeployed: live at `https://lawn-care-app-xi.vercel.app` (200, no redirect). `site:connect` run in the user's terminal (the secret never entered the chat): connected, then "degraded" until the site module answers its ping. The user put the three values in `.env.local` and Vercel. Site module installed: `lib/pilot-light/` copied unchanged (11 files, module 2026-10-17, `diff -r` identical) + `app/api/pilot-light/[action]/route.ts` (`pilotLightRoute({})`, ping built in); `.env.example` documents the three names. Verified locally: tsc, lint, build (the route is dynamic); a ping signed like Pilot Light's → 200 `connected`, module 2026-10-17; unsigned → 401; wrong secret → 401. Still to do: the user pushes, then `site:check` |
 | - | Checkpoint 0 | ☐ | |
 | 5 | SaaS businesses & members | ☐ | Pilot Light, generic |
 | 6 | Member scope | ☐ | Pilot Light, generic |
@@ -440,7 +442,7 @@ Each tier includes its members' Lena usage. Like every Pilot Light plan, nothing
 | 23 | Legal pages | ☐ | |
 | 23a | Kindling's site: "Pilot Light for SaaS" plan | ☐ | Added 2026-11-15 (user request). One plan, three tiers inside its card: $600 / $800 / $1,000 a month for up to 25 / 50 / 100 members |
 | - | ⚠️ M8 Sending domain | ☐ | |
-| - | ⚠️ M9 Vercel & domain | ☐ | |
+| - | ⚠️ M9 The custom domain | ☐ | The Vercel project was created at M3 |
 | - | ⚠️ M10 Prices | ☐ | |
 | - | ⚠️ M11 Stripe live | ☐ | |
 | 24 | Go-live | ☐ | |

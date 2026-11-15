@@ -43,7 +43,7 @@ Open <http://localhost:3001>.
 
 ## 6. Deploy
 
-At gate M9 (near the end): the project goes on Vercel, where `vercel-build` migrates, then builds. Nothing goes to GitHub or Vercel before then.
+The site is on Vercel at its free `*.vercel.app` address from gate M3 (so the live Pilot Light can reach it); the custom domain comes at gate M9. Every deploy runs `vercel-build`: migrations first, then the build. Vercel gets the database URLs by connecting `lawn-care-app-db` to the project (Storage → Connect Project); without that the build stops with a message saying so.
 
 ---
 
@@ -53,7 +53,7 @@ Each gate is also written inline in `plan.md` at the step it blocks. Pilot Light
 
 ### M1: The App's database (Step 3)
 1. <https://vercel.com/dashboard> (team selected) → **Storage** → **Create Database** → **Neon** → **Continue**.
-2. Region **Washington, D.C., USA (iad1)**; name `lawn-care-app-db` → **Create**. Skip connecting a project (M9 does).
+2. Region **Washington, D.C., USA (iad1)**; name `lawn-care-app-db` → **Create**. Skip connecting a project (M3 does).
 3. **.env.local** tab → **Show secret** → copy the pooled `DATABASE_URL` and the direct `DATABASE_URL_UNPOOLED` into this repo's `.env.local` (pasting Vercel's block as it is works; the older name `POSTGRES_URL_NON_POOLING` works too).
 4. Tell Claude; Claude runs the migrations and seed.
 
@@ -66,10 +66,13 @@ Done once the migrations and seed run.
 
 Done once you can sign in as the App's admin. At go-live (Step 24) it moves to the real admin email.
 
-### M3: Connect this site to Pilot Light (Step 4)
-1. Claude runs `npm run site:connect -- --business <app-slug>` in Pilot Light; it prints `DATABASE_URL`, `PILOT_LIGHT_BUSINESS_ID`, `PILOT_LIGHT_SITE_SECRET`.
-2. Put them in this repo's `.env.local`; Claude copies the site module into `lib/pilot-light/` (with your OK).
-3. Claude runs `npm run site:check -- --business <app-slug>`.
+### M3: Connect this site to Pilot Light, at its Vercel address (Step 4)
+The live Pilot Light health-checks every connected site and can't reach `localhost`, so the site is connected at its free `*.vercel.app` address (the custom domain comes at M9).
+1. Push this repo (you commit and push) → <https://vercel.com/new> → import it.
+2. Vercel → **Storage** → `lawn-care-app-db` → **Connect Project** → this project, all environments → **Redeploy**. Note the `*.vercel.app` address.
+3. Claude runs `npm run site:connect -- --business lawn-care-app --url https://<address>.vercel.app` in Pilot Light; it prints `PILOT_LIGHT_URL`, `PILOT_LIGHT_BUSINESS_ID`, `PILOT_LIGHT_SITE_SECRET`.
+4. Put them in this repo's `.env.local` and the Vercel project's env vars (the secret marked **Sensitive**); never in chat. Claude copies the site module into `lib/pilot-light/` and its route (with your OK); you commit and push (redeploy).
+5. Claude runs `npm run site:check -- --business lawn-care-app`.
 
 Done once the check passes.
 
@@ -104,11 +107,11 @@ Claude runs Pilot Light's `email:domain` for the App's domain; add the DNS recor
 
 Done once a test invoice arrives from the App's domain.
 
-### M9: Vercel & domain (Step 24)
-1. Push this repo (you commit and push).
-2. <https://vercel.com/new> → import it → connect the App's database (M1) → add every env var from `.env.local` (Sensitive where marked).
-3. **Settings → Domains** → the domain (M6) with its DNS.
-4. Point Stripe's webhooks and `site:connect` at the live address.
+### M9: The custom domain (Step 24)
+The Vercel project exists since M3.
+1. Vercel → the project → **Settings → Domains** → the domain (M6) with its DNS.
+2. Claude runs `site:connect --url https://<domain>` (moves the site; its new secret goes into Vercel).
+3. Point Stripe's webhooks at the domain; check every env var is in Vercel.
 
 Done once the site loads on its domain and `site:check` passes.
 

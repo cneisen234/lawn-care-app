@@ -21,7 +21,9 @@ const optionalKey = z.preprocess(
 const schema = z.object({
   // M1: the App's database (Neon, created in Vercel Storage)
   DATABASE_URL: optionalKey, // pooled ("-pooler" in the host), used at runtime
-  POSTGRES_URL_NON_POOLING: optionalKey, // direct, used by migrations (drizzle.config.ts)
+  // direct, used by migrations (drizzle.config.ts): Vercel's block names it DATABASE_URL_UNPOOLED
+  DATABASE_URL_UNPOOLED: optionalKey,
+  POSTGRES_URL_NON_POOLING: optionalKey, // the same, by its older name
 });
 
 const env = schema.parse(process.env);

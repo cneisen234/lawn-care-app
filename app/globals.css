@@ -47,7 +47,7 @@
   --outline: var(--forest-deep);
   --outline-width: 2px;
   --radius: 1.1rem;
-  --radius-field: 0.875rem;
+  --radius-field: 14px;      /* px, not 0.875rem: the minifier ships ".875rem", which theme:import refuses */
   --radius-button: 9999px;
   --shadow: 5px 5px 0 rgba(154, 131, 95, 0.55);
   --shadow-button: 4px 4px 0 var(--forest-deep);

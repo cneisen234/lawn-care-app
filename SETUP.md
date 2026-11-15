@@ -54,7 +54,7 @@ Each gate is also written inline in `plan.md` at the step it blocks. Pilot Light
 ### M1: The App's database (Step 3)
 1. <https://vercel.com/dashboard> (team selected) → **Storage** → **Create Database** → **Neon** → **Continue**.
 2. Region **Washington, D.C., USA (iad1)**; name `lawn-care-app-db` → **Create**. Skip connecting a project (M9 does).
-3. **.env.local** tab → **Show secret** → copy the pooled `DATABASE_URL` and the non-pooled URL into this repo's `.env.local`.
+3. **.env.local** tab → **Show secret** → copy the pooled `DATABASE_URL` and the direct `DATABASE_URL_UNPOOLED` into this repo's `.env.local` (pasting Vercel's block as it is works; the older name `POSTGRES_URL_NON_POOLING` works too).
 4. Tell Claude; Claude runs the migrations and seed.
 
 Done once the migrations and seed run.

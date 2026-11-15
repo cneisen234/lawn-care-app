@@ -12,11 +12,13 @@ import { defineConfig } from "drizzle-kit";
 
 config({ path: ".env.local", quiet: true });
 
-const migrationUrl = process.env.POSTGRES_URL_NON_POOLING || process.env.DATABASE_URL;
+// The direct connection goes by two names: Vercel's Neon block calls it
+// DATABASE_URL_UNPOOLED; older setups call it POSTGRES_URL_NON_POOLING.
+const migrationUrl = process.env.POSTGRES_URL_NON_POOLING || process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
 
 if (!migrationUrl) {
   throw new Error(
-    "Set POSTGRES_URL_NON_POOLING (preferred) or DATABASE_URL in .env.local before running drizzle-kit (gate M1 in plan.md / SETUP.md).",
+    "Set DATABASE_URL_UNPOOLED (or POSTGRES_URL_NON_POOLING; preferred) or DATABASE_URL in .env.local before running drizzle-kit (gate M1 in plan.md / SETUP.md).",
   );
 }
 

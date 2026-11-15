@@ -134,7 +134,7 @@ Each gate is repeated inline at the step it blocks. Pilot Light's existing accou
 - Nullable **`member_id`** on every `ops` table holding a member's content (at least actions, scheduled_tasks, conversations, messages, contacts, notifications, model_facts, twin_edges, knowledge_chunks, simulations, verifications, audit_log, errors, emails; the full list is settled in Step 6 by auditing every table). Null = business-wide (admin-level).
 
 ### 2C. The App database `public` schema (owned and migrated by **this repo**)
-Every table carries **`member_id`** (indexed, first in composite indexes); money in integer cents; rates in basis points. The member scope column name follows the new SaaS site convention (Step 7).
+Every table carries **`member_id`** (indexed, first in composite indexes); money in integer cents; rates in basis points. The member scope column name follows the new SaaS site convention (Step 7). Every link between member-owned records has **two foreign keys**: a single-column one (what Pilot Light's schema reader uses) and a composite one including `member_id`, so the database itself refuses a cross-member link.
 - **members** (`member_id` = its own id): business_name, contact_name, email (login), phone, address, logo_url, tax_rate_bp, mileage_rate_cents, billing_default (monthly|per_visit), invoice_due_days, next_invoice_number, **subscription_status** (trialing|active|past_due|canceled), stripe_customer_id, stripe_subscription_id, current_period_end, **comped**, stripe_account_id, payouts_enabled, status (active|disabled).
 - **clients:** name, email, phone, billing_address, billing (monthly|per_visit), notes, status.
 - **properties:** client_id, address, lat, lng, **lawn_polygon** (GeoJSON), **lawn_sqft**, measured_at, notes.
@@ -228,7 +228,7 @@ Every table carries **`member_id`** (indexed, first in composite indexes); money
 
 ---
 
-## 4. Build steps (24 steps, Phases 0–6)
+## 4. Build steps (25 steps, Phases 0–6)
 
 ### Phase 0: Foundation
 **Step 1: Brand foundation (this repo).** Read the Next 16 docs. Put the brand into this repo: tokens, classes, fonts, `Logo`, `GrassEdge`, `MownLawn`, nav and footer; add the site-convention theme variables; replace the starter page. Wordmark uses the placeholder until M6.
@@ -240,7 +240,7 @@ Every table carries **`member_id`** (indexed, first in composite indexes); money
 > **⚠️ MANUAL GATE (M1): The App's database.**
 > 1. <https://vercel.com/dashboard> (team selected) → **Storage** → **Create Database** → **Neon** → **Continue**.
 > 2. Region **Washington, D.C., USA (iad1)**; name `lawn-care-app-db` → **Create**. Skip connecting a project (M9 does).
-> 3. **.env.local** tab → **Show secret** → copy the pooled `DATABASE_URL` and the non-pooled URL into this repo's `.env.local`.
+> 3. **.env.local** tab → **Show secret** → copy the pooled `DATABASE_URL` and the direct `DATABASE_URL_UNPOOLED` into this repo's `.env.local` (pasting Vercel's block as it is works; the older name `POSTGRES_URL_NON_POOLING` works too).
 > 4. Tell Claude; Claude runs the migrations and seed.
 >
 > ☑ once the migrations and seed run.
@@ -345,6 +345,16 @@ Every table carries **`member_id`** (indexed, first in composite indexes); money
 
 **Step 23: Legal pages.** Terms and Privacy on the site; agreement recorded through the invite's terms acceptance.
 
+**Step 23a: Kindling's site: the "Pilot Light for SaaS" plan (user request, 2026-11-15).** A third monthly plan on kindlingdigital.org (`/Users/christopherneisen/Desktop/Kindling-Digital-Website`), beside **Brand in a Box** ($100/month) and **Business in a Box** ($300/month), titled **"Pilot Light for SaaS"**: everything in Brand in a Box and Business in a Box, designed for SaaS products. What it adds is Pilot Light's SaaS layer (Phase 1): your product's own members, each with their own login, running their business inside it; one Lena configuration you set for every member, each member's Lena knowing only their own business; subscriptions and payment gates for your members; your members getting paid by their own customers (Stripe Connect); a marketing and signup site. **One plan, three tiers inside it (user decision, 2026-11-15):**
+
+| Tier (working name) | Price | Members included |
+|---|---|---|
+| Launch | **$600/month** | up to 25 |
+| Growth | **$800/month** | up to 50 |
+| Scale | **$1,000/month** | up to 100 |
+
+Each tier includes its members' Lena usage. Like every Pilot Light plan, nothing is unlimited: a member past the tier's limit means the next tier up, and past 100 members Kindling quotes it. Where it changes: the `plans` list on `app/pricing/page.tsx` gains a third plan card, "Pilot Light for SaaS", that shows its three tiers **inside the card** (Brand in a Box and Business in a Box keep their single price), plus everywhere else the plans are named (home page, Services, the Pilot Light page, FAQ, site metadata). The card's exact wording and the tier names are settled with the user before anything changes. The same plan goes into Pilot Light's own `plan.md` Section 9 (pricing), whose rule is that kindlingdigital.org always matches it. Claude never commits in that repo either.
+
 > **⚠️ MANUAL GATE (M8): Sending domain.** Claude runs Pilot Light's `email:domain` for the App's domain; add the DNS records it prints at the registrar; Claude verifies.
 >
 > ☑ once a test invoice arrives from the App's domain.
@@ -380,7 +390,7 @@ Every table carries **`member_id`** (indexed, first in composite indexes); money
 | SendGrid (existing) | Welcome, invoice, quote, reminder emails | By volume | M8 |
 | UploadThing, OpenAI, Expo, Apple (existing) | Photos, Lena, phone app | Existing | — |
 
-**Env (this repo):** `DATABASE_URL`, `POSTGRES_URL_NON_POOLING`, `PILOT_LIGHT_URL`, `PILOT_LIGHT_BUSINESS_ID`, `PILOT_LIGHT_SITE_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_CONNECT_WEBHOOK_SECRET`, `STRIPE_PRICE_IDS` (M10), `SENDGRID_API_KEY`, `APP_URL`. **Pilot Light adds:** `GOOGLE_MAPS_BROWSER_KEY`, `GOOGLE_MAPS_SERVER_KEY`.
+**Env (this repo):** `DATABASE_URL`, `DATABASE_URL_UNPOOLED` (or `POSTGRES_URL_NON_POOLING`), `PILOT_LIGHT_URL`, `PILOT_LIGHT_BUSINESS_ID`, `PILOT_LIGHT_SITE_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_CONNECT_WEBHOOK_SECRET`, `STRIPE_PRICE_IDS` (M10), `SENDGRID_API_KEY`, `APP_URL`. **Pilot Light adds:** `GOOGLE_MAPS_BROWSER_KEY`, `GOOGLE_MAPS_SERVER_KEY`.
 
 ---
 
@@ -388,15 +398,15 @@ Every table carries **`member_id`** (indexed, first in composite indexes); money
 
 **Status key:** ☐ not started · ◐ in progress · ☑ done
 
-**Current phase:** Phase 0 in progress. Steps 1–2 done (2026-11-15). Next: Step 3 (writing the schema; generating and running its migrations needs gate M1, since drizzle-kit needs the database URL). Plan redrawn from scratch 2026-11-15 (generic SaaS layer, no phone-app work). Member naming, member logins, admin visibility and Stripe Connect confirmed (Square not planned). Full-control switch confirmed with hardened rules (Step 9); Stripe Connect is new work, accepted. Open: question (a) (tax rate), needed before Step 19.
+**Current phase:** Phase 0 in progress. Steps 1–3 and gate M1 done (2026-11-15). Next: Step 4 (the App in Pilot Light), with gates M2 and M3. Plan redrawn from scratch 2026-11-15 (generic SaaS layer, no phone-app work). Member naming, member logins, admin visibility and Stripe Connect confirmed (Square not planned). Full-control switch confirmed with hardened rules (Step 9); Stripe Connect is new work, accepted. Open: question (a) (tax rate), needed before Step 19.
 
 | Step | Description | Status | Notes |
 |---|---|---|---|
 | 1 | Brand foundation | ☑ | Read Next 16 fonts/CSS/metadata/caching docs first. `app/globals.css`: the brand's tokens and classes, plus the site-convention theme block (all 18 variables; every text pair checked ≥4.5:1: muted = `--ash` 7.4 (`--stone` is 3.5, kept for large text only), brand-soft text = `--forest` 7.4 (moss-deep is 3.4)). `components/`: `Logo`, `GrassEdge`, `MownLawn`, `Navigation`, `Footer`, content from `lib/site.ts` (the placeholder name, one place until M6; menu empty until Step 20, so no menu button and no dead links). Layout: Zilla Slab, Caveat, Nunito Sans; metadata + theme color. Starter page replaced by a branded placeholder home (hero, dark mown band with sign cards, striped lawn), no buttons yet. **Found and fixed:** Cache Components refuses a bare `new Date()` in prerender, so the footer's year is a cached component (`'use cache'` + `cacheLife('days')`). Verified: tsc, lint, `next build` clean (home static, revalidates daily); in the browser at desktop and 375px: no console errors, no sideways scroll, all 18 theme variables resolve, fonts resolve to their Google Fonts names (`theme:import` can read them; Pilot Light's validator accepts the minifier's 8-digit hex shadow). **Port:** local Pilot Light holds 3000, so this site runs on **3001** (`dev` script + launch.json). **For Step 20:** the brand's small decorative text is under 4.5:1 (eyebrow moss-deep on cream 3.8, tan-deep accents 3.1, badge moss-deep on sage 3.4); fine as accents, but don't use them for anything people must read |
 | 2 | Env, database layer & SETUP.md | ☑ | Followed Kindling's client-site pattern (a site that owns its schema) + Pilot Light's env pattern; versions matched to them: `drizzle-orm` ^0.45.4, `@neondatabase/serverless` ^1.2.1, `ws` ^8.23, `zod` ^4.6.7, `server-only`; dev `drizzle-kit` ^0.31.11, `dotenv` ^18, `@types/ws`. `lib/db/index.ts` (server-only; Neon serverless Pool over WebSockets so transactions work; URL through `lib/env.ts`), `lib/db/schema.ts` (empty until Step 3), `drizzle.config.ts` (loads `.env.local`, migrates over the direct connection, `out: drizzle/`, strict; the one direct `process.env` reader). Scripts: `db:generate`, `db:migrate`, `db:studio`, `vercel-build` (migrate, then build), `start` on 3001. `lib/env.ts`: zod, every key optional at load (blank = unset), `getDatabaseUrl()` fails naming gate M1 (missing, or not a Postgres URL), `configured.database()`; only M1's variables now, each later step adds its own. `.env.example` (committed: `!.env.example` in `.gitignore`) + blank `.env.local` (ignored). `SETUP.md`: prerequisites, install, env, database commands, run on 3001, deploy, all 11 gates with full steps (same text as here). `.claude/launch.json` was done in Step 1. Verified: tsc, lint, build clean; drizzle-kit with no URL stops with the M1 message; `getDatabaseUrl()` missing → "Complete gate M1", malformed → "not a Postgres connection string", valid → returned; `.env.example` tracked, `.env.local` ignored. `npm audit`: **0 in production dependencies**; 11 moderate in dev-only tools (esbuild inside drizzle-kit, minimatch inside eslint-config-next), left as is (the forced fix downgrades them) |
-| 3 | The App's schema | ☐ | |
-| - | ⚠️ M1 The App's database | ☐ | |
-| 4 | The App in Pilot Light | ☐ | |
+| 3 | The App's schema | ☑ | `lib/db/schema.ts`: all 14 Section 2C tables, 12 status enums, money in cents, rates in basis points, check constraints. **Two foreign keys on every link between member-owned records:** a single-column one (Pilot Light's schema reader only reads those) and a composite one with `member_id` (16 of them), so the database itself refuses cross-member links. A member is never cascade-deleted; a job's checklist/photos and an invoice's lines go with it; payments never cascade; a used service can't be deleted, only switched off. `jobs.minutes` is a generated column from the `started_at`/`completed_at` stamps. Added to 2C while building: `members.timezone`, `jobs.quote_request_id`, `jobs.weather_note` (instead of a flag), `client_invoices.tax_rate_bp` (kept with the invoice) and `last_reminder_at`, `client_payments.stripe_account_id`. Migration `drizzle/0000_init_app_schema.sql` (reviewed: no destructive statements). `scripts/seed.ts` (`npm run db:seed`, tsx): two test members (Green Acres: active, monthly; Northwoods: comped, per visit, 6% tax), touching only their two fixed ids, one transaction, dates relative to today. The direct connection is read as `DATABASE_URL_UNPOOLED` (Vercel's name) or `POSTGRES_URL_NON_POOLING`. Verified on the real database: every invoice's lines, tax and total add up; paid invoices equal their payments; job statuses match their invoices; minutes match the stamps; checklist amounts match each member's pricing; **0 cross-member links**; every invoice state present for both members; seed re-runs identically; **a direct insert of one member's job onto another member's client is refused by the database** (`jobs_member_client_fk`). Note: weekends have no visits, so a job in progress only appears in weekday seeds |
+| - | ⚠️ M1 The App's database | ☑ | `lawn-care-app-db` (Neon, Vercel Storage, iad1, PostgreSQL 18.7); pooled + direct URLs in `.env.local` (Vercel's block pasted as is) |
+| 4 | The App in Pilot Light | ◐ | `business:create` → "Lawn Care App" (`lawn-care-app`, America/Detroit, status setup, Lena + Sync & Guard); `db:register` → the App database registered (pooled), `ops` schema v27 (+27), add-ons synced; the App's `public` tables and seed untouched (14 tables, 2 members). `theme:import --url http://localhost:3001` → saved, every pair readable, Nunito Sans / Zilla Slab. **Found and fixed:** the minifier ships `0.875rem` as `.875rem`, which theme:import refuses, so `--radius-field` is `14px`. The App appears in Kindling's clients report (`clientReport()`, the console's source). Waiting: M2, M3 (the site has no public address yet; the live health checks don't skip localhost) |
 | - | ⚠️ M2 Admin login (test email) | ☐ | |
 | - | ⚠️ M3 Connect this site | ☐ | |
 | - | Checkpoint 0 | ☐ | |
@@ -428,6 +438,7 @@ Every table carries **`member_id`** (indexed, first in composite indexes); money
 | 22 | Audit | ☐ | Both repos |
 | - | ⚠️ M7 Terms & Privacy | ☐ | |
 | 23 | Legal pages | ☐ | |
+| 23a | Kindling's site: "Pilot Light for SaaS" plan | ☐ | Added 2026-11-15 (user request). One plan, three tiers inside its card: $600 / $800 / $1,000 a month for up to 25 / 50 / 100 members |
 | - | ⚠️ M8 Sending domain | ☐ | |
 | - | ⚠️ M9 Vercel & domain | ☐ | |
 | - | ⚠️ M10 Prices | ☐ | |

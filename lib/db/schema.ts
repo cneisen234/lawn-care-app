@@ -7,7 +7,15 @@
 //    points (100 = 1%). Statuses are Postgres enums (Pilot Light's maps check
 //    their values).
 //  - MEMBER SCOPE: every table except `members` has `member_id`. The `members`
-//    row's own `id` is its scope.
+//    row's own `id` is its scope. The DATABASE enforces it for members
+//    (drizzle/0001_member_scope.sql): Pilot Light runs a member's statements as
+//    the restricted role `pilot_light_member`, for which row-level security
+//    shows, changes and accepts only that member's rows, and a column default
+//    stamps their new rows. This site's own user isn't bound by those policies,
+//    so the site ALWAYS names the member it writes for (`memberId` stays
+//    required here). A NEW TABLE needs the same four statements in its
+//    migration before a member can reach it (pilot-light/docs/site-conventions.md
+//    §8), and `npm run db:check` proves it.
 //  - Two foreign keys on every link between member-owned records:
 //      1. a single-column key (e.g. job.client_id → clients.id), which is what
 //         Pilot Light's schema reader uses to see how records link;

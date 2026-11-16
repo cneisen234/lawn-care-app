@@ -30,6 +30,10 @@ This repo owns the App database's `public` schema (`lib/db/schema.ts`). Migratio
 | `npm run db:generate` | Turns schema changes in `lib/db/schema.ts` into a new migration in `drizzle/` |
 | `npm run db:migrate` | Applies pending migrations to the database in `.env.local` (over the direct connection) |
 | `npm run db:studio` | Opens Drizzle Studio to look at the data |
+| `npm run db:seed` | Rewrites the two test members and their data (touches only those two) |
+| `npm run db:check` | Proves member scope on the live database: reads its rules, then attacks it as two members, in this site's tables and in Pilot Light's own (`ops`). Changes nothing. **Run it after every migration** (`--verbose` lists every check) |
+
+**Member scope (plan.md Section 3B).** Every member's rows live in this one database, and the database itself keeps them apart for members: row-level security for the restricted role `pilot_light_member` (`drizzle/0001_member_scope.sql`). A new member-owned table needs its four statements (row-level security, the `member_scope` policy, the `member_id` default, the grant) in its migration: see `pilot-light/docs/site-conventions.md` §8.
 
 Additive migrations only (plan.md build discipline). In production, `vercel-build` runs the migrations before every build.
 

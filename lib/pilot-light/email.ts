@@ -18,6 +18,10 @@ export const SITE_EMAIL_KINDS = [
   "order_confirmation",
   "order_update",
   "purchase_confirmation",
+  /** A business's invoice, quote, or payment reminder to its customer (with a link to view it). */
+  "invoice",
+  "quote",
+  "payment_reminder",
   /** Anything else the site sends. */
   "other",
 ] as const;

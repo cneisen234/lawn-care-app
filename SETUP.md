@@ -80,6 +80,15 @@ The live Pilot Light health-checks every connected site and can't reach `localho
 
 Done once the check passes.
 
+### M3a: Emails to members' customers (Step 12)
+Invoices, quotes and payment reminders go out from the site through Kindling's SendGrid (the same account Pilot Light uses), from Kindling's domain under the member's business name until the App's own domain (M8).
+1. Copy `SENDGRID_API_KEY` from Pilot Light's `.env.local` into this repo's `.env.local`.
+2. Make the link secret: run `openssl rand -base64 32` in a terminal and put the result in this repo's `.env.local` as `PORTAL_LINK_SECRET`. Set it once: changing it later breaks every link already emailed.
+3. Put both in the Vercel project's env vars too (marked **Sensitive**), the same values; never in chat.
+4. Restart this site's dev server.
+
+Done once a test invoice email arrives.
+
 ### M4: Stripe for the App, test mode (Step 13)
 1. <https://dashboard.stripe.com> → a new account for the App → stay in **Test mode**.
 2. **Connect → Get started** → platform → **Express** accounts.

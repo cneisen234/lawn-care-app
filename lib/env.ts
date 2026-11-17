@@ -26,6 +26,14 @@ const schema = z.object({
   // direct, used by migrations (drizzle.config.ts): Vercel's block names it DATABASE_URL_UNPOOLED
   DATABASE_URL_UNPOOLED: optionalKey,
   POSTGRES_URL_NON_POOLING: optionalKey, // the same, by its older name
+  // M3a: emails to members' customers (invoices, quotes, reminders): Kindling's SendGrid key, and the secret that
+  // signs the links in them (any long random value, set once; changing it breaks every link already sent)
+  SENDGRID_API_KEY: optionalKey,
+  PORTAL_LINK_SECRET: optionalKey,
+  // Optional: who the emails come from until the App's own sending domain (M8). Defaults to Kindling's domain.
+  EMAIL_FROM: optionalKey,
+  // Set by Vercel on its own: the site's production address (the custom domain once it's added)
+  VERCEL_PROJECT_PRODUCTION_URL: optionalKey,
 });
 
 const env = schema.parse(process.env);
@@ -54,7 +62,37 @@ export function getDatabaseUrl(): string {
   return value;
 }
 
+/** Kindling's SendGrid key, for the emails the site sends members' customers (gate M3a). */
+export function getSendgridKey(): string {
+  const value = env.SENDGRID_API_KEY;
+  if (!value) throw new MissingEnvError("SENDGRID_API_KEY", "M3a");
+  if (!value.startsWith("SG.")) throw new InvalidEnvError("SENDGRID_API_KEY", "not a SendGrid API key (it starts with SG.)", "M3a");
+  return value;
+}
+
+/** The secret that signs client-portal links (gate M3a). */
+export function getPortalLinkSecret(): string {
+  const value = env.PORTAL_LINK_SECRET;
+  if (!value) throw new MissingEnvError("PORTAL_LINK_SECRET", "M3a");
+  if (value.length < 32) throw new InvalidEnvError("PORTAL_LINK_SECRET", "too short (use at least 32 random characters)", "M3a");
+  return value;
+}
+
+/** Who the site's emails come from: Kindling's authenticated domain until the App's own (M8). */
+export function getEmailFrom(): string {
+  return env.EMAIL_FROM ?? "invoices@kindlingdigital.org";
+}
+
+/** The site's own address, for links in emails: this computer under `next dev`, the live address everywhere else. */
+export function getSiteUrl(): string {
+  if (process.env.NODE_ENV === "development") return `http://localhost:${process.env.PORT ?? "3001"}`;
+  const live = env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (!live) throw new MissingEnvError("VERCEL_PROJECT_PRODUCTION_URL", "M3 (Vercel sets it on its own once the project is deployed)");
+  return `https://${live.replace(/^https?:\/\//, "")}`;
+}
+
 /** Whether each gate's values are present, without throwing (for status checks). */
 export const configured = {
   database: () => Boolean(env.DATABASE_URL),
+  email: () => Boolean(env.SENDGRID_API_KEY && env.PORTAL_LINK_SECRET),
 };

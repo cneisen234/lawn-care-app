@@ -51,7 +51,6 @@ const monthEnd = (key: string) => {
 };
 /** A time on that day, Detroit-ish (UTC−4); good enough for test data. */
 const at = (ymd: string, hour: number, minute = 0) => new Date(`${ymd}T${String(hour + 4).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00Z`);
-const fmtDay = (ymd: string) => new Date(`${ymd}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 
 /** Small deterministic random numbers, so a re-run makes the same shape of data. */
 function rng(seed: number) {
@@ -410,7 +409,7 @@ function buildMember(m: MemberSpec, rows: Rows) {
     let order = 0;
     for (const v of d.visits) {
       for (const l of v.lines) {
-        rows.lines.push({ memberId: m.id, invoiceId: id, jobId: v.jobId, serviceDate: v.day, description: `${l.label}, ${fmtDay(v.day)}`, quantity: l.quantity, unitCents: l.unitCents, amountCents: l.amountCents, sortOrder: order++ });
+        rows.lines.push({ memberId: m.id, invoiceId: id, jobId: v.jobId, serviceDate: v.day, description: l.pricing === "per_sqft" ? l.label : l.label.replace(/ \(.*\)$/, ""), quantity: l.quantity, unitCents: l.unitCents, amountCents: l.amountCents, sortOrder: order++ });
       }
       if (d.status !== "draft" && d.status !== "ready") invoiced.add(v.jobId);
     }

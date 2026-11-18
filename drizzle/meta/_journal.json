@@ -15,6 +15,13 @@
       "when": 1794789794573,
       "tag": "0001_member_scope",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795003581778,
+      "tag": "0002_by_hand_payments",
+      "breakpoints": true
     }
   ]
 }

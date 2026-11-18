@@ -30,7 +30,7 @@ const ROLE = "pilot_light_member";
 const SETTING = "pilot_light.member_id";
 /** The members table is scoped by its own id; every other table by member_id. */
 const scopeColumn = (table: string) => (table === "members" ? "id" : "member_id");
-/** What a member may only read (the site records payments from Stripe). */
+/** What a member may never write as a whole table (payments: only by-hand ones, column by column; see attack()). */
 const READ_ONLY = ["client_payments"];
 
 let failed = 0;
@@ -152,8 +152,32 @@ async function attack(tables: string[], me: { id: string; name: string }, other:
       check(`${me.name}: can't attach a job to another member's client (the database's own key)`, /jobs_member_(client|property)_fk/.test(fk), fk.slice(0, 90));
     }
 
-    for (const sqlText of ["insert into client_payments (invoice_id, stripe_payment_intent, stripe_account_id, amount_cents) select id, 'pi_forged', 'acct_x', 1 from client_invoices limit 1", "update client_payments set status = 'refunded'", "delete from client_payments"]) {
-      check(`${me.name}: can't ${sqlText.split(" ")[0]} payments`, /permission denied/.test(await refused(c, sqlText)));
+    // Payments: the site records card payments from Stripe; a member only records one by hand (Mark as paid) and voids it.
+    const cardRefusals: [string, string][] = [
+      ["make a card payment", "insert into client_payments (invoice_id, stripe_payment_intent, stripe_account_id, amount_cents, status) select id, 'pi_forged', 'acct_x', 100, 'succeeded' from client_invoices limit 1"],
+      ["write a refund", "update client_payments set refunded_cents = 1"],
+      ["change a payment's amount", "update client_payments set amount_cents = 1"],
+      ["delete payments", "delete from client_payments"],
+    ];
+    for (const [what, sqlText] of cardRefusals) check(`${me.name}: can't ${what}`, /permission denied/.test(await refused(c, sqlText)));
+    const [card] = (await c.query("select id from client_payments where method is null limit 1")).rows;
+    if (card) {
+      check(`${me.name}: can't mark a card payment refunded`, /only void a payment recorded by hand/.test(await refused(c, "update client_payments set status = 'refunded' where id = $1", [card.id])));
+      check(`${me.name}: can't void a card payment`, /only void a payment recorded by hand/.test(await refused(c, "update client_payments set status = 'voided' where id = $1", [card.id])));
+    }
+    const [ownInv] = (await c.query("select id from client_invoices limit 1")).rows;
+    if (ownInv) {
+      const added = await c.query("insert into client_payments (invoice_id, amount_cents, method, note, paid_at, status) values ($1, 2500, 'cash', 'check test', now(), 'succeeded') returning id, member_id", [ownInv.id]);
+      check(`${me.name}: can record a cash payment on their own invoice, stamped as theirs`, added.rows[0]?.member_id === me.id);
+      const voided = await c.query("update client_payments set status = 'voided' where id = $1", [added.rows[0].id]);
+      check(`${me.name}: can void a payment they recorded by hand`, voided.rowCount === 1);
+      check(`${me.name}: can't un-void it`, /only void a payment recorded by hand/.test(await refused(c, "update client_payments set status = 'succeeded' where id = $1", [added.rows[0].id])));
+      check(`${me.name}: can't record a cash payment with no method`, /client_payments_kind/.test(await refused(c, "insert into client_payments (invoice_id, amount_cents, status) values ($1, 100, 'succeeded')", [ownInv.id])));
+    }
+    const [otherInv] = (await pool.query("select id from client_invoices where member_id = $1 limit 1", [other.id])).rows;
+    if (otherInv) {
+      const err = await refused(c, "insert into client_payments (invoice_id, amount_cents, method, status) values ($1, 100, 'cash', 'succeeded')", [otherInv.id]);
+      check(`${me.name}: can't record a payment on another member's invoice (the database's own key)`, /client_payments_member_invoice_fk/.test(err), err.slice(0, 90));
     }
 
     const own = await c.query("update members set business_name = business_name");

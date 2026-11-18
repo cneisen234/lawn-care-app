@@ -10,11 +10,11 @@
 
 import "server-only";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { clientInvoices, clientPayments, members } from "@/lib/db/schema";
 import { getPortalLinkSecret, getSiteUrl, getStripe } from "@/lib/env";
-import { canTakePayments, chargeOnMemberAccount, memberOnboardingLink, stripeEvent, StripeCallError, type StripeEvent } from "@/lib/pilot-light";
+import { canTakePayments, chargeOnMemberAccount, memberOnboardingLink, notifyChange, stripeEvent, StripeCallError, type StripeEvent } from "@/lib/pilot-light";
 import { pilotLight } from "@/lib/pilot-light/config";
 
 /** Something the person sees, said plainly (a card declined with Stripe's own words, an invoice already paid). */
@@ -139,23 +139,14 @@ async function paymentSucceeded(e: StripeEvent) {
   if (!inv) return;
   const amountCents = pi.amount_received || pi.amount || 0;
   if (amountCents <= 0) return;
-  await db.transaction(async (tx) => {
-    const added = await tx
-      .insert(clientPayments)
-      .values({ memberId, invoiceId, stripePaymentIntent: pi.id, stripeAccountId: e.account!, amountCents, status: "succeeded", paidAt: new Date() })
-      .onConflictDoNothing({ target: clientPayments.stripePaymentIntent })
-      .returning({ id: clientPayments.id });
-    if (!added.length) return; // already recorded
-    const [{ paid }] = await tx
-      .select({ paid: sql<number>`coalesce(sum(${clientPayments.amountCents} - ${clientPayments.refundedCents}), 0)::int` })
-      .from(clientPayments)
-      .where(and(eq(clientPayments.invoiceId, inv.id), eq(clientPayments.memberId, memberId), eq(clientPayments.status, "succeeded")));
-    if (paid >= inv.totalCents)
-      await tx
-        .update(clientInvoices)
-        .set({ status: "paid", paidAt: new Date(), updatedAt: new Date() })
-        .where(and(eq(clientInvoices.id, inv.id), eq(clientInvoices.memberId, memberId), inArray(clientInvoices.status, ["sent", "overdue"])));
-  });
+  const added = await db
+    .insert(clientPayments)
+    .values({ memberId, invoiceId, stripePaymentIntent: pi.id, stripeAccountId: e.account!, amountCents, status: "succeeded", paidAt: new Date() })
+    .onConflictDoNothing({ target: clientPayments.stripePaymentIntent })
+    .returning({ id: clientPayments.id });
+  if (!added.length) return; // already recorded
+  // Pilot Light's Invoicing marks the invoice paid once its payments cover it (card and by hand alike, one rule): look now.
+  await notifyChange({ type: "payment.received", ref: { table: "client_payments", id: added[0].id }, key: `payment:${pi.id}` }).catch(() => {});
 }
 
 /** A refund (made in Pilot Light, or in the member's own Stripe): what's been refunded on that payment. */

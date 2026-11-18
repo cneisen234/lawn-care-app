@@ -60,7 +60,10 @@ export const quoteRequestStatus = pgEnum("quote_request_status", ["new", "contac
 export const jobStatus = pgEnum("job_status", ["quoted", "scheduled", "in_progress", "done", "invoiced", "canceled"]);
 export const photoKind = pgEnum("photo_kind", ["before", "after"]);
 export const invoiceStatus = pgEnum("invoice_status", ["draft", "ready", "sent", "overdue", "paid", "void"]);
-export const paymentStatus = pgEnum("payment_status", ["pending", "succeeded", "failed", "refunded"]);
+// voided: a payment recorded by hand and taken back (entered by mistake); it no longer counts. Never a card payment.
+export const paymentStatus = pgEnum("payment_status", ["pending", "succeeded", "failed", "refunded", "voided"]);
+/** How a payment recorded by hand came in (cash, a check…). A card payment (Stripe) has none. */
+export const paymentMethod = pgEnum("payment_method", ["cash", "check", "bank_transfer", "other"]);
 export const expenseKind = pgEnum("expense_kind", ["fuel", "materials", "equipment", "mileage", "other"]);
 
 const timestamps = {
@@ -443,7 +446,11 @@ export const invoiceLines = pgTable(
   ],
 );
 
-/** A client's payment of an invoice, charged on the member's own Stripe account (Connect). Never cascades. */
+/**
+ * A client's payment of an invoice: by card, charged on the member's own Stripe account (Connect) and recorded by the
+ * site from Stripe's messages; or recorded by hand (Mark as paid: cash, a check…), which the member may add and void,
+ * never a card one. Never cascades.
+ */
 export const clientPayments = pgTable(
   "client_payments",
   {
@@ -452,10 +459,14 @@ export const clientPayments = pgTable(
     invoiceId: uuid("invoice_id")
       .notNull()
       .references(() => clientInvoices.id, { onDelete: "restrict" }),
-    /** The Stripe PaymentIntent id (pi_…): how Pilot Light finds it to show or refund it. */
-    stripePaymentIntent: text("stripe_payment_intent").notNull(),
-    /** The member's connected Stripe account it was charged on (acct_…). */
-    stripeAccountId: text("stripe_account_id").notNull(),
+    /** A card payment's Stripe PaymentIntent id (pi_…): how Pilot Light finds it to show or refund it. */
+    stripePaymentIntent: text("stripe_payment_intent"),
+    /** A card payment's Stripe account: the member's own (acct_…). */
+    stripeAccountId: text("stripe_account_id"),
+    /** How a payment recorded by hand came in; null for a card payment. */
+    method: paymentMethod("method"),
+    /** A payment recorded by hand: anything worth keeping (a check number). */
+    note: text("note"),
     amountCents: integer("amount_cents").notNull(),
     status: paymentStatus("status").notNull().default("pending"),
     paidAt: timestamp("paid_at", { withTimezone: true }),
@@ -467,6 +478,16 @@ export const clientPayments = pgTable(
     foreignKey({ name: "client_payments_member_invoice_fk", columns: [t.memberId, t.invoiceId], foreignColumns: [clientInvoices.memberId, clientInvoices.id] }).onDelete("restrict"),
     index("client_payments_member_invoice_idx").on(t.memberId, t.invoiceId),
     check("client_payments_money", sql`${t.amountCents} > 0 and ${t.refundedCents} between 0 and ${t.amountCents}`),
+    // Exactly one kind: a card payment (both Stripe ids, no method) or one recorded by hand (a method, no Stripe ids).
+    check(
+      "client_payments_kind",
+      sql`(${t.method} is null and ${t.stripePaymentIntent} is not null and ${t.stripeAccountId} is not null) or (${t.method} is not null and ${t.stripePaymentIntent} is null and ${t.stripeAccountId} is null)`,
+    ),
+    // One recorded by hand is received or voided, never refunded through Stripe; only it can be voided.
+    check(
+      "client_payments_by_hand",
+      sql`(${t.method} is null and ${t.status}::text <> 'voided') or (${t.method} is not null and ${t.status}::text in ('succeeded', 'voided') and ${t.refundedCents} = 0)`,
+    ),
   ],
 );
 

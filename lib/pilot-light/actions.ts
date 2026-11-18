@@ -31,8 +31,11 @@ export type SiteActionRequest = {
   actor: string;
 };
 
-/** `id`: the new record's id (a create the site made). `message`: shown to the owner. */
-export type SiteActionReply = { id?: string; message?: string } | void;
+/**
+ * `id`: the new record's id (a create the site made). `message`: shown to the owner. `url`: a page to send the person
+ * to next (https; e.g. Stripe's onboarding form for a member's Get paid), opened by Pilot Light after the action.
+ */
+export type SiteActionReply = { id?: string; message?: string; url?: string } | void;
 export type SiteActionHandler = (request: SiteActionRequest) => Promise<SiteActionReply>;
 
 /**
@@ -71,7 +74,7 @@ async function handle(request: Request, name: string, actions: Record<string, Si
   if (!handler) return reply(404, { ok: false, error: `the website doesn't handle "${name}"` });
   try {
     const result = (await handler(input)) ?? {};
-    return reply(200, { ok: true, ...(result.id ? { id: String(result.id) } : {}), ...(result.message ? { message: result.message } : {}) });
+    return reply(200, { ok: true, ...(result.id ? { id: String(result.id) } : {}), ...(result.message ? { message: result.message } : {}), ...(result.url ? { url: String(result.url) } : {}) });
   } catch (err) {
     if (err instanceof SiteActionRefused) return reply(422, { ok: false, error: err.message });
     console.error(`[pilot-light] Site action "${name}" failed:`, err);

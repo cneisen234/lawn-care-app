@@ -4,4 +4,4 @@
 // and `site:check`, `connections` and `usage:report` flag a site running an
 // older copy. Bump it (to the day's date) with every change to the module.
 
-export const SITE_MODULE_VERSION = "2026-11-17";
+export const SITE_MODULE_VERSION = "2026-11-18";

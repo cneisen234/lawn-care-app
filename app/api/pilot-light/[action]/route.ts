@@ -4,6 +4,6 @@
 // (`npm run site:actions`); what they do is lib/site-actions.ts (plan.md Step 12).
 
 import { pilotLightRoute } from "@/lib/pilot-light";
-import { invoiceRemind, invoiceSend, quoteSend } from "@/lib/site-actions";
+import { getPaid, invoiceRemind, invoiceSend, quoteSend } from "@/lib/site-actions";
 
-export const POST = pilotLightRoute({ "invoice-send": invoiceSend, "invoice-remind": invoiceRemind, "quote-send": quoteSend });
+export const POST = pilotLightRoute({ "invoice-send": invoiceSend, "invoice-remind": invoiceRemind, "quote-send": quoteSend, "get-paid": getPaid });

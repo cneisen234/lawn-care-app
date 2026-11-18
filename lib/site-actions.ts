@@ -16,6 +16,7 @@ import { SiteActionRefused, type SiteActionHandler } from "@/lib/pilot-light";
 import { EmailError, sendEmail } from "@/lib/email/send";
 import { invoiceEmail, quoteEmail, reminderEmail, type Sender } from "@/lib/email/templates";
 import { portalLink, portalToken, tokenHash } from "@/lib/portal-links";
+import { PaymentRefused, startGetPaid } from "@/lib/payments";
 
 const sender = (m: typeof members.$inferSelect): Sender => ({ businessName: m.businessName, logoUrl: m.logoUrl });
 
@@ -94,4 +95,19 @@ export const quoteSend: SiteActionHandler = async (req) => {
   await send("quote", m, { email: request.email, name: request.name }, quoteEmail(sender(m), { totalCents: job.quoteCents, address: place?.address ?? request.address }, portalLink("quote", job.id)));
   await db.update(quoteRequests).set({ status: "quoted", updatedAt: sql`now()` }).where(and(eq(quoteRequests.id, request.id), eq(quoteRequests.memberId, request.memberId)));
   return { message: `emailed ${request.name} their quote` };
+};
+
+/**
+ * get-paid: a member's Get paid in Pilot Light (Step 13). Their Stripe account (made on the first press) and the page
+ * to finish it on: Stripe's own form, or the stand-in's before the App's keys are in. Pilot Light sends the member's
+ * own record and the pages to come back to (only ever Pilot Light's own address), and opens the page this answers.
+ */
+export const getPaid: SiteActionHandler = async (req) => {
+  if (req.operation !== "update" || !req.id) throw new SiteActionRefused("this only sets up getting paid for a business");
+  try {
+    return { url: await startGetPaid({ memberId: req.id, returnUrl: req.values?.return_url, refreshUrl: req.values?.refresh_url }) };
+  } catch (err) {
+    if (err instanceof PaymentRefused) throw new SiteActionRefused(err.message);
+    throw err;
+  }
 };

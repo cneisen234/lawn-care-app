@@ -30,6 +30,11 @@ const schema = z.object({
   // signs the links in them (any long random value, set once; changing it breaks every link already sent)
   SENDGRID_API_KEY: optionalKey,
   PORTAL_LINK_SECRET: optionalKey,
+  // M4: the App's Stripe account (members getting paid by their clients, Step 13). All three or none: without them
+  // the demo stand-in plays Stripe's part, so Get paid and paying an invoice can be shown before the account exists.
+  STRIPE_SECRET_KEY: optionalKey,
+  STRIPE_PUBLISHABLE_KEY: optionalKey,
+  STRIPE_CONNECT_WEBHOOK_SECRET: optionalKey, // the signing secret of the webhook endpoint for connected accounts
   // Optional: who the emails come from until the App's own sending domain (M8). Defaults to Kindling's domain.
   EMAIL_FROM: optionalKey,
   // Set by Vercel on its own: the site's production address (the custom domain once it's added)
@@ -89,6 +94,25 @@ export function getSiteUrl(): string {
   const live = env.VERCEL_PROJECT_PRODUCTION_URL;
   if (!live) throw new MissingEnvError("VERCEL_PROJECT_PRODUCTION_URL", "M3 (Vercel sets it on its own once the project is deployed)");
   return `https://${live.replace(/^https?:\/\//, "")}`;
+}
+
+export type StripeKeys = { secretKey: string; publishableKey: string; webhookSecret: string };
+
+/**
+ * The App's Stripe keys (gate M4), or null before they exist: then the demo stand-in plays Stripe's part (lib/payments.ts).
+ * Some but not all of them is a setup mistake, and fails loudly.
+ */
+export function getStripe(): StripeKeys | null {
+  const { STRIPE_SECRET_KEY: secretKey, STRIPE_PUBLISHABLE_KEY: publishableKey, STRIPE_CONNECT_WEBHOOK_SECRET: webhookSecret } = env;
+  if (!secretKey && !publishableKey && !webhookSecret) return null;
+  if (!secretKey) throw new MissingEnvError("STRIPE_SECRET_KEY", "M4");
+  if (!publishableKey) throw new MissingEnvError("STRIPE_PUBLISHABLE_KEY", "M4");
+  if (!webhookSecret) throw new MissingEnvError("STRIPE_CONNECT_WEBHOOK_SECRET", "M4");
+  if (!/^sk_(test|live)_/.test(secretKey)) throw new InvalidEnvError("STRIPE_SECRET_KEY", "not a Stripe secret key (it starts with sk_test_ or sk_live_)", "M4");
+  if (!/^pk_(test|live)_/.test(publishableKey)) throw new InvalidEnvError("STRIPE_PUBLISHABLE_KEY", "not a Stripe publishable key (it starts with pk_test_ or pk_live_)", "M4");
+  if (!webhookSecret.startsWith("whsec_")) throw new InvalidEnvError("STRIPE_CONNECT_WEBHOOK_SECRET", "not a webhook signing secret (it starts with whsec_)", "M4");
+  if (secretKey.startsWith("sk_test_") !== publishableKey.startsWith("pk_test_")) throw new InvalidEnvError("STRIPE_PUBLISHABLE_KEY", "from the other mode (test and live keys can't be mixed)", "M4");
+  return { secretKey, publishableKey, webhookSecret };
 }
 
 /** Whether each gate's values are present, without throwing (for status checks). */

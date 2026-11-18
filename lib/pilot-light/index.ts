@@ -11,3 +11,4 @@ export { LenaForCustomers } from "./lena";
 export { PilotLightConfigError } from "./config";
 export { SITE_MODULE_VERSION } from "./version";
 export { siteEmailHeaders, SITE_EMAIL_KINDS, SITE_EMAIL_KIND_HEADER, type SiteEmailKind } from "./email";
+export { memberOnboardingLink, getMemberAccount, canTakePayments, chargeOnMemberAccount, stripeEvent, signedByStripe, StripeCallError, type MemberStripeAccount, type StripeEvent } from "./stripe";

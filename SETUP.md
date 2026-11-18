@@ -90,12 +90,15 @@ Invoices, quotes and payment reminders go out from the site through Kindling's S
 Done once a test invoice email arrives.
 
 ### M4: Stripe for the App, test mode (Step 13)
+Until this is done, a stand-in plays Stripe's part (Get paid, paying an invoice), so it can all be demoed. It switches off by itself once the three keys below are in.
 1. <https://dashboard.stripe.com> → a new account for the App → stay in **Test mode**.
-2. **Connect → Get started** → platform → **Express** accounts.
-3. **Developers → API keys** → secret key; **Webhooks** → the endpoints Claude gives you (locally signed test events until M9).
-4. Keys into this repo's `.env.local`; Claude connects the same account as the App business's Stripe connection in Pilot Light (`stripe:connect`).
+2. **Connect → Get started** → a platform whose businesses are paid directly by their own customers (Stripe's SaaS setup: each member gets their own Stripe account; no platform fee).
+3. **Developers → API keys:** the **Secret key** (`sk_test_…`) → `STRIPE_SECRET_KEY`; the **Publishable key** (`pk_test_…`) → `STRIPE_PUBLISHABLE_KEY`.
+4. **Developers → Webhooks → Add endpoint:** listen to events on **Connected accounts**, at `<this site's address>/api/stripe/webhook`, events `account.updated`, `payment_intent.succeeded`, `charge.refunded` → its **Signing secret** (`whsec_…`) → `STRIPE_CONNECT_WEBHOOK_SECRET`.
+5. All three into this repo's `.env.local` and the Vercel project's env vars (the secret key and signing secret marked **Sensitive**); never in chat. Restart the dev server.
+6. Claude connects the same account in Pilot Light as the App business's Stripe connection (`stripe:connect`), so refunds work, and clears the stand-in's made-up accounts (members' `acct_demo…` values) so every member presses Get paid once for real.
 
-Done once a test member connects an Express account.
+Done once a test member finishes **Get paid** on Stripe's form and a test client pays an invoice with Stripe's test card.
 
 ### M5: Google Maps Platform keys (Step 15)
 1. <https://console.cloud.google.com> → a project for the App → **Billing** (with a budget alert).
